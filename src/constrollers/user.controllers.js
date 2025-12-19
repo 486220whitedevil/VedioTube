@@ -243,4 +243,103 @@ const changePassword = asyncHandler( async ( req, res) => {
         .json(new ApiResponse(200, {}, "Password changed successfully")); 
 
 });
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changePassword }
+
+const updateAccountDetails = asyncHandler( async ( req, res ) => {
+    // get user details from the request body
+    // get user id from req.user
+    // find user from db using id 
+    // if user not found throw error 
+    // if user found update user details in db
+    // send response
+
+    const { fullname , email,username} = req.body;
+    if ([fullname , email, username].some((fields) => fields?.trim() === "")){
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const user = await User.findByIdAndUpdate(req.user?._id , {
+        $set: {
+            fullname, email, username
+        }
+    },{new: true}).select("-password")
+
+    if (!user || !user._id){
+        throw new ApiError (404, "User not found");
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user , "User details updated successfully"));
+        
+})
+
+const updateProfileImage = asyncHandler( async (req, res ) => {
+    // get profile image path from req.file
+    // get user id from req.user
+    // find user from db using id
+    // if user not found throw error
+    // if user found upload image to cloudinary
+    // update user profile image in db 
+    const profileImageLocalPath = req.file?.path;
+    if (!profileImageLocalPath){
+        throw new ApiError (400, "Profile image is required");
+    }
+
+    const profileImage = await uploadOnCloudinary (profileImageLocalPath)
+    if (!profileImage || !profileImage.url){
+        throw new ApiError (500, "Profile image upload failed");
+    }
+
+    const user = await User.findByIdAndUpdate ( req.user?._id , {
+        $set: {
+            profileImage: profileImage.url
+        }
+    }, { new: true}).select ("-password");
+
+    if (!user || !user._id){
+        throw new ApiError (404, "User not found");
+    }
+
+    return res
+    .status (200)
+    .json ( new ApiResponse (200, user , "Profile image updated successfully"));
+
+})
+
+const updateCoverImage = asyncHandler ( async (req, res ) => {
+    // get cover image path from req.file
+    // check if file is present
+    // get user id from req.user
+    // find user from db using id
+    // if user not found throw error 
+    // if user found upload image to cloudinary 
+    // update user cover image in db 
+    // return response
+
+    const coverImageLocalPath = req.file?.path;
+    if( !coverImageLocalPath){
+        throw new ApiError (400, "Cover image is required");
+    }
+
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+    if ( !coverImage || ! coverImage.url){
+        throw new ApiError (500, "Cover image upload failed");
+    }
+
+    const user  = await User.findByIdAndUpdate ( req.user?._id,{
+        $set: {
+            coverImage: coverImage.url
+        }
+    }, { new: true}).select ("-password");
+
+    if ( !user || ! user._id){
+        throw new ApiError (404, "User not found");
+    }
+
+    return res
+    .status (200)
+    .json ( new ApiResponse (200, user , "Cover image updated successfully"));
+
+})
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken, changePassword , updateAccountDetails, updateProfileImage , updateCoverImage };
