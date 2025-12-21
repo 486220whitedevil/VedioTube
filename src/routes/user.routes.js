@@ -36,5 +36,4 @@ router.route("/update-profile-image").patch(verifyAccessToken,upload.single("pro
 router.route("/update-cover-image").patch(verifyAccessToken,upload.single("coverImage"),updateCoverImage)
 
 
-
 export default router;
